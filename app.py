@@ -68,43 +68,48 @@ if "last_op_feedback" not in st.session_state:
 
 
 # ==============================================================================
-# 3. BAŞLIK & HERO BANNER
-# ==============================================================================
-
-UIComponents.render_hero_banner()
-
-
-# ==============================================================================
-# ==============================================================================
-# 4. SIDEBAR & VERİ YÜKLEME
+# 3. VERİ YÜKLEME VE CACHING MOTORU
 # ==============================================================================
 
 @st.cache_data(show_spinner=False)
-def load_excel_cached(file_bytes: bytes, sheet_name: str, header_row: int) -> pd.DataFrame:
+def get_cached_sample_data() -> pd.DataFrame:
+    """Örnek veri setini hafızada önbelleğe alır ve anında döner."""
+    return DataProcessor.generate_sample_sales_data()
+
+
+@st.cache_data(show_spinner=False)
+def load_excel_cached(file_bytes: bytes, sheet_name: Optional[str], header_row: int) -> Tuple[pd.DataFrame, Dict[str, Any]]:
     """Excel tablosunu hafızadaki bayt akışından hızlı ve hatasız yükler."""
-    df = pd.read_excel(io.BytesIO(file_bytes), sheet_name=sheet_name, header=header_row)
-    return DataProcessor.sanitize_dataframe(df)
+    return DataProcessor.load_excel(file_bytes, sheet_name=sheet_name, header=header_row)
 
 
 @st.cache_data(show_spinner=False)
-def load_csv_cached(file_bytes: bytes) -> pd.DataFrame:
-    """CSV tablosunu farklı ayraç denemeleriyle (virgül, noktalı virgül, tab) güvenle yükler."""
-    for sep in [",", ";", "\t", "|"]:
-        try:
-            df = pd.read_csv(io.BytesIO(file_bytes), sep=sep)
-            if df.shape[1] > 1:
-                return DataProcessor.sanitize_dataframe(df)
-        except Exception:
-            continue
-    df = pd.read_csv(io.BytesIO(file_bytes))
-    return DataProcessor.sanitize_dataframe(df)
+def load_csv_cached(
+    file_bytes: bytes,
+    sep: Optional[str] = None,
+    encoding: Optional[str] = None,
+    decimal: Optional[str] = None,
+    header_row: int = 0
+) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """CSV tablosunu akıllı kodlama, ayraç ve ondalık tespitiyle hatasız yükler."""
+    return DataProcessor.load_csv(
+        file_bytes=file_bytes,
+        sep=sep,
+        encoding=encoding,
+        decimal=decimal,
+        header=header_row
+    )
 
+
+# ==============================================================================
+# 4. SIDEBAR & VERİ KAYNAĞI SEÇİMİ (ANINDA YÜKLENİR)
+# ==============================================================================
 
 with st.sidebar:
     st.markdown("### 📥 Veri Kaynağı")
     data_source = st.radio(
         "Veri Girişi Yöntemi",
-        ["Excel Dosyası Yükle (.xlsx, .xls)", "🎯 Hazır Örnek Veri Seti Kullan"],
+        ["🎯 Hazır Örnek Veri Seti Kullan", "📁 Excel / CSV Dosyası Yükle (.xlsx, .xls, .csv)"],
         index=0
     )
 
@@ -112,23 +117,67 @@ with st.sidebar:
     selected_sheet = None
     header_row = 0
     uploaded_file = None
+    file_meta: Dict[str, Any] = {}
 
-    if data_source == "Excel Dosyası Yükle (.xlsx, .xls)":
+    if data_source == "📁 Excel / CSV Dosyası Yükle (.xlsx, .xls, .csv)":
         uploaded_file = st.file_uploader(
-            "Excel Dosyanızı Seçin",
-            type=["xlsx", "xls", "xlsm", "csv"],
-            help="Microsoft Excel (.xlsx, .xls) veya CSV formatındaki tablolarınızı buraya sürükleyip bırakabilirsiniz."
+            "Excel veya CSV Dosyanızı Seçin",
+            type=["xlsx", "xls", "xlsm", "csv", "tsv", "txt"],
+            help="Microsoft Excel (.xlsx, .xls) veya CSV/TSV formatındaki tablolarınızı buraya sürükleyip bırakabilirsiniz."
         )
 
         if uploaded_file is not None:
             try:
                 file_bytes = uploaded_file.getvalue()
-                if uploaded_file.name.lower().endswith(".csv"):
+                fn_lower = uploaded_file.name.lower()
+                is_csv = fn_lower.endswith((".csv", ".tsv", ".txt"))
+
+                if is_csv:
                     selected_sheet = "CSV"
-                    with st.spinner("CSV verisi işleniyor ve optimize ediliyor..."):
-                        raw_df = load_csv_cached(file_bytes)
+
+                    # Gelişmiş CSV Parametreleri (İsteğe bağlı manuel kontrol)
+                    with st.expander("⚙️ Gelişmiş CSV / Metin Ayarları", expanded=False):
+                        csv_sep_opt = st.selectbox(
+                            "Ayraç (Delimiter)",
+                            ["Otomatik Tespit", "Virgül (,)", "Noktalı Virgül (;)", "Tab (\\t)", "Dikey Çizgi (|)"],
+                            index=0,
+                            help="Dosyanızda sütunları ayıran karakter. 'Otomatik Tespit' önerilir."
+                        )
+                        csv_enc_opt = st.selectbox(
+                            "Karakter Kodlaması (Encoding)",
+                            ["Otomatik Tespit", "UTF-8", "UTF-8-BOM", "CP1254 (Türkçe Windows)", "ISO-8859-9", "Latin-1"],
+                            index=0,
+                            help="Türkçe karakterlerin doğru görünmesi için kodlama. 'Otomatik Tespit' akıllıca seçer."
+                        )
+                        csv_dec_opt = st.selectbox(
+                            "Ondalık Ayracı (Decimal)",
+                            ["Otomatik Tespit", "Nokta (.)", "Virgül (,)"],
+                            index=0,
+                            help="Sayısal ondalık ayracı."
+                        )
+                        header_row = st.number_input(
+                            "Başlık (Header) Satır İndeksi",
+                            min_value=0, max_value=20, value=0,
+                            help="Sütun isimlerinin bulunduğu satır indeksi (genellikle 0)."
+                        )
+
+                    sep_map = {"Virgül (,)": ",", "Noktalı Virgül (;)": ";", "Tab (\\t)": "\t", "Dikey Çizgi (|)": "|"}
+                    enc_map = {"UTF-8": "utf-8", "UTF-8-BOM": "utf-8-sig", "CP1254 (Türkçe Windows)": "cp1254", "ISO-8859-9": "iso-8859-9", "Latin-1": "latin-1"}
+                    dec_map = {"Nokta (.)": ".", "Virgül (,)": ","}
+
+                    custom_sep = sep_map.get(csv_sep_opt)
+                    custom_enc = enc_map.get(csv_enc_opt)
+                    custom_dec = dec_map.get(csv_dec_opt)
+
+                    with st.spinner("CSV tablosu taranıyor, kodlama ve ayraçlar optimize ediliyor..."):
+                        raw_df, file_meta = load_csv_cached(
+                            file_bytes=file_bytes,
+                            sep=custom_sep,
+                            encoding=custom_enc,
+                            decimal=custom_dec,
+                            header_row=header_row
+                        )
                 else:
-                    # Excel sayfalarını güvenli BytesIO üzerinden oku
                     excel_obj = pd.ExcelFile(io.BytesIO(file_bytes))
                     sheet_names = excel_obj.sheet_names
 
@@ -145,24 +194,32 @@ with st.sidebar:
                     )
 
                     with st.spinner("Excel tablosu yükleniyor ve şema taranıyor..."):
-                        raw_df = load_excel_cached(file_bytes, selected_sheet, header_row)
+                        raw_df, file_meta = load_excel_cached(file_bytes, selected_sheet, header_row)
 
                 if raw_df is not None and not raw_df.empty:
-                    NotificationHub.notify_success(f"'{uploaded_file.name}' yüklendi ({len(raw_df)} satır x {len(raw_df.columns)} sütun).")
+                    NotificationHub.notify_success(f"'{uploaded_file.name}' yüklendi ({len(raw_df):,} satır × {len(raw_df.columns)} sütun).")
                 else:
-                    st.warning("⚠️ Seçilen sayfada veya satırda okunabilir veri bulunamadı. Başlık satır indeksini kontrol edin.")
+                    st.warning("⚠️ Seçilen dosyada okunabilir veri bulunamadı. Başlık satır indeksini veya ayraç ayarlarını kontrol edin.")
 
             except Exception as e:
                 st.error(f"❌ Dosya okunurken bir hata oluştu:\n{e}")
                 NotificationHub.notify_error(f"Dosya okuma hatası: {str(e)}")
                 raw_df = None
     else:
-        st.success("✅ 'Satış & Müşteri Performansı' örnek veri seti devrede.")
-        raw_df = DataProcessor.generate_sample_sales_data()
+        st.success("✅ 'Satış & Müşteri Performansı' örnek veri seti aktif.")
+        raw_df = get_cached_sample_data()
+        file_meta = {"encoding": "UTF-8", "rows": len(raw_df), "cols": len(raw_df.columns), "duration_ms": 0.0}
 
     st.markdown("---")
     st.markdown("### ⚙️ Görsel Ayarlar")
     theme_plot = st.selectbox("Grafik Renk Teması", ["plotly_dark", "plotly_white", "ggplot2", "seaborn", "simple_white"], index=0)
+
+
+# ==============================================================================
+# 5. BAŞLIK & HERO BANNER
+# ==============================================================================
+
+UIComponents.render_hero_banner()
 
 
 # Veri yoksa karşılama vitrini göster
@@ -196,14 +253,16 @@ if raw_df is None or raw_df.empty:
 
 
 # ==============================================================================
-# 5. AKTİF VERİ ÇERÇEVESİ YÖNETİMİ
+# 6. AKTİF VERİ ÇERÇEVESİ YÖNETİMİ
 # ==============================================================================
 
 current_source_sig = (
     data_source,
     uploaded_file.name if uploaded_file is not None else "sample",
     selected_sheet,
-    header_row
+    header_row,
+    file_meta.get("encoding", ""),
+    file_meta.get("delimiter", "")
 )
 
 if "active_df" not in st.session_state or st.session_state.get("last_source") != current_source_sig:
@@ -218,8 +277,11 @@ schema_report = SchemaValidator.validate_dataframe(df)
 
 
 # ==============================================================================
-# 6. ÜST ÖZET KPI KARTLARI & İŞLEM BİLDİRİMİ
+# 6. ÜST ÖZET KPI KARTLARI, DOSYA BİLGİSİ & İŞLEM BİLDİRİMİ
 # ==============================================================================
+
+if uploaded_file is not None and file_meta:
+    UIComponents.render_file_upload_card(uploaded_file.name, file_meta)
 
 if st.session_state.last_op_feedback:
     fb = st.session_state.last_op_feedback
@@ -748,35 +810,82 @@ with tab_charts:
     with col_chart_view:
         try:
             fig = None
+            plot_df = df.copy()
+
+            # NaN ve negatif boyut koruması (Plotly marker size invalid element [nan] hatasını engeller)
+            safe_size_col = None
+            if size_col and size_col in plot_df.columns:
+                s_size = pd.to_numeric(plot_df[size_col], errors="coerce")
+                if s_size.notna().sum() > 0:
+                    fill_val = s_size.median() if (s_size.median() is not None and s_size.median() > 0) else (s_size.mean() if s_size.mean() > 0 else 1.0)
+                    s_size = s_size.fillna(fill_val).abs()
+                    if (s_size <= 0).all():
+                        s_size = s_size + 1.0
+                    plot_df[f"_safe_size_{size_col}"] = s_size
+                    safe_size_col = f"_safe_size_{size_col}"
+                else:
+                    st.info(f"💡 '{size_col}' sütunundaki tüm değerler eksik/geçersiz olduğundan baloncuk boyutu varsayılana ayarlandı.")
+
+            # Değer sütunları (pie, treemap, sunburst) için NaN ve negatif koruması
+            safe_val_col = None
+            if y_axis in num_cols:
+                s_val = pd.to_numeric(plot_df[y_axis], errors="coerce").fillna(0)
+                if chart_type in ["🥧 Pasta / Halka (Donut) Grafiği", "🗺️ Ağaç Haritası (Treemap)", "☀️ Güneş Patlaması (Sunburst)"]:
+                    s_val = s_val.clip(lower=0)
+                plot_df[f"_safe_val_{y_axis}"] = s_val
+                safe_val_col = f"_safe_val_{y_axis}"
+
             if chart_type == "📊 Bar / Çubuk Grafiği":
-                fig = px.bar(df, x=x_axis, y=y_axis, color=color_val, title=chart_title, template=theme_plot, barmode="group")
+                fig = px.bar(plot_df, x=x_axis, y=y_axis, color=color_val, title=chart_title, template=theme_plot, barmode="group")
             elif chart_type == "📉 Çizgi (Line / Trend) Grafiği":
-                fig = px.line(df, x=x_axis, y=y_axis, color=color_val, title=chart_title, template=theme_plot, markers=True)
+                fig = px.line(plot_df, x=x_axis, y=y_axis, color=color_val, title=chart_title, template=theme_plot, markers=True)
             elif chart_type == "🔵 Saçılım (Scatter / Dağılım)":
-                trend_opt = "ols" if x_axis in num_cols and y_axis in num_cols and len(df[[x_axis, y_axis]].dropna()) > 2 else None
-                fig = px.scatter(df, x=x_axis, y=y_axis, color=color_val, size=size_col, trendline=trend_opt, title=chart_title, template=theme_plot)
+                trend_opt = None
+                if x_axis in num_cols and y_axis in num_cols:
+                    valid_pairs = plot_df[[x_axis, y_axis]].dropna()
+                    if len(valid_pairs) > 3 and valid_pairs[x_axis].nunique() > 1 and valid_pairs[y_axis].nunique() > 1:
+                        trend_opt = "ols"
+                fig = px.scatter(
+                    plot_df,
+                    x=x_axis,
+                    y=y_axis,
+                    color=color_val,
+                    size=safe_size_col,
+                    trendline=trend_opt,
+                    title=chart_title,
+                    template=theme_plot
+                )
             elif chart_type == "📦 Kutu (Box Plot) Grafiği":
-                fig = px.box(df, x=x_axis, y=y_axis, color=color_val, title=chart_title, template=theme_plot, points="outliers")
+                fig = px.box(plot_df, x=x_axis, y=y_axis, color=color_val, title=chart_title, template=theme_plot, points="outliers")
             elif chart_type == "🎻 Keman (Violin Plot) Grafiği":
-                fig = px.violin(df, x=x_axis, y=y_axis, color=color_val, box=True, points="all", title=chart_title, template=theme_plot)
+                fig = px.violin(plot_df, x=x_axis, y=y_axis, color=color_val, box=True, points="all", title=chart_title, template=theme_plot)
             elif chart_type == "📊 Histogram & Yoğunluk":
-                fig = px.histogram(df, x=x_axis, y=y_axis if y_axis != x_axis else None, color=color_val, marginal="box", title=chart_title, template=theme_plot)
+                fig = px.histogram(plot_df, x=x_axis, y=y_axis if y_axis != x_axis else None, color=color_val, marginal="box", title=chart_title, template=theme_plot)
             elif chart_type == "🥧 Pasta / Halka (Donut) Grafiği":
-                fig = px.pie(df, names=x_axis, values=y_axis if y_axis in num_cols else None, hole=0.4, title=chart_title, template=theme_plot)
+                fig = px.pie(plot_df, names=x_axis, values=safe_val_col, hole=0.4, title=chart_title, template=theme_plot)
             elif chart_type == "🗺️ Ağaç Haritası (Treemap)":
                 path_cols = [x_axis]
                 if color_val and color_val != x_axis:
                     path_cols.append(color_val)
-                fig = px.treemap(df, path=path_cols, values=y_axis if y_axis in num_cols else None, title=chart_title, template=theme_plot)
+                fig = px.treemap(plot_df, path=path_cols, values=safe_val_col, title=chart_title, template=theme_plot)
             elif chart_type == "☀️ Güneş Patlaması (Sunburst)":
                 path_cols = [x_axis]
                 if color_val and color_val != x_axis:
                     path_cols.append(color_val)
-                fig = px.sunburst(df, path=path_cols, values=y_axis if y_axis in num_cols else None, title=chart_title, template=theme_plot)
+                fig = px.sunburst(plot_df, path=path_cols, values=safe_val_col, title=chart_title, template=theme_plot)
             elif chart_type == "🧊 3D Saçılım (3D Scatter)":
-                fig = px.scatter_3d(df, x=x_axis, y=y_axis, z=z_axis, color=color_val, size=size_col, title=chart_title, template=theme_plot)
+                fig = px.scatter_3d(
+                    plot_df,
+                    x=x_axis,
+                    y=y_axis,
+                    z=z_axis,
+                    color=color_val,
+                    size=safe_size_col,
+                    title=chart_title,
+                    template=theme_plot
+                )
             elif chart_type == "🌡️ 2D Yoğunluk Isı Haritası":
-                fig = px.density_heatmap(df, x=x_axis, y=y_axis, title=chart_title, template=theme_plot, marginal_x="histogram", marginal_y="histogram")
+                fig = px.density_heatmap(plot_df, x=x_axis, y=y_axis, title=chart_title, template=theme_plot, marginal_x="histogram", marginal_y="histogram")
 
             if fig is not None:
                 fig.update_layout(height=chart_height, margin=dict(l=20, r=20, t=40, b=20))
@@ -1052,17 +1161,14 @@ with tab_stats_ml:
 
             with sim_tab2:
                 st.markdown("#### 📁 Yeni Dosya ile Toplu Tahmin Yapın")
-                batch_file = st.file_uploader("Tahmin Yapılacak Excel/CSV Dosyası", type=["xlsx", "xls", "csv"], key="batch_uploader")
+                batch_file = st.file_uploader("Tahmin Yapılacak Excel/CSV Dosyası", type=["xlsx", "xls", "xlsm", "csv", "tsv", "txt"], key="batch_uploader")
                 target_batch_df = None
 
                 if batch_file is not None:
                     try:
-                        if batch_file.name.endswith(".csv"):
-                            target_batch_df = pd.read_csv(batch_file)
-                        else:
-                            target_batch_df = pd.read_excel(batch_file)
-                        target_batch_df = DataProcessor.sanitize_dataframe(target_batch_df)
-                        st.caption(f"Yüklenen dosya: **{len(target_batch_df)}** satır.")
+                        b_bytes = batch_file.getvalue()
+                        target_batch_df, b_meta = DataProcessor.load_file(b_bytes, batch_file.name)
+                        st.caption(f"Yüklenen dosya: **{len(target_batch_df):,}** satır × **{len(target_batch_df.columns)}** sütun.")
                     except Exception as b_err:
                         st.error(f"Dosya okunamadı: {b_err}")
                 else:

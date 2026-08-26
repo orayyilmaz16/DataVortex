@@ -107,3 +107,55 @@ def test_filter_rule(clean_sales_df):
     assert err is None
     assert (filtered_df["Satış Adedi"] > 20).all()
     assert dropped_cnt == len(df) - len(filtered_df)
+
+
+def test_detect_encoding_and_delimiter():
+    csv_str = "Ürün Adı;Kategori;Fiyat;Satış Adedi\nBilgisayar;Elektronik;25000,50;10\nŞapka;Giyim;150,00;45\nÇanta;Aksesuar;450,75;20"
+    b_utf8 = csv_str.encode("utf-8")
+    enc = DataProcessor.detect_encoding(b_utf8)
+    assert enc in ["utf-8", "utf-8-sig"]
+    delim = DataProcessor.detect_delimiter(csv_str)
+    assert delim == ";"
+
+    b_cp1254 = csv_str.encode("cp1254")
+    enc_cp = DataProcessor.detect_encoding(b_cp1254)
+    assert enc_cp in ["cp1254", "iso-8859-9"]
+
+    b_bom = b"\xef\xbb\xbf" + csv_str.encode("utf-8")
+    assert DataProcessor.detect_encoding(b_bom) == "utf-8-sig"
+
+
+def test_load_csv_automatic():
+    csv_text = "Müşteri Adı;Şehir;Harcama Tutarı;Sadık Mı\nAhmet Çelik;İstanbul;1.250,50;Evet\nAyşe Güner;İzmir;850,25;Hayır\nÖmer Şen;Ankara;3.400,00;Evet\n"
+    file_bytes = csv_text.encode("utf-8-sig")
+
+    df, meta = DataProcessor.load_csv(file_bytes)
+    assert len(df) == 3
+    assert len(df.columns) == 4
+    assert meta["delimiter"] == ";"
+    assert "Müşteri Adı" in df.columns
+    assert "Sadık Mı" in df.columns
+    assert pd.api.types.is_numeric_dtype(df["Harcama Tutarı"])
+    assert df["Harcama Tutarı"].iloc[0] == pytest.approx(1250.50)
+
+
+def test_load_csv_cp1254():
+    csv_text = "Bölge,Ürün,Gelir\nİç Anadolu,Güneş Gözlüğü,450.50\nEge,Şort,120.00\n"
+    file_bytes = csv_text.encode("cp1254")
+
+    df, meta = DataProcessor.load_csv(file_bytes)
+    assert len(df) == 2
+    assert "Bölge" in df.columns
+    assert df["Bölge"].iloc[0] == "İç Anadolu"
+    assert df["Ürün"].iloc[0] == "Güneş Gözlüğü"
+
+
+def test_load_file_unified():
+    tsv_text = "ID\tDeger\tSkor\n1\tA\t10.5\n2\tB\t20.2\n"
+    df, meta = DataProcessor.load_file(tsv_text.encode("utf-8"), "test.tsv")
+    assert len(df) == 2
+    assert meta["delimiter"] == "\t"
+
+    empty_df, meta_empty = DataProcessor.load_file(b"", "empty.csv")
+    assert empty_df.empty
+    assert meta_empty["rows"] == 0

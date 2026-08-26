@@ -139,3 +139,22 @@ def test_data_stress_tester(clean_sales_df):
     assert diag["overall_score"] >= 80.0
     assert diag["tests_passed"] >= 8
     assert len(diag["details"]) == diag["total_tests"]
+    assert diag["total_tests"] == 12
+
+
+def test_validate_csv_integrity():
+    # 1. Valid CSV
+    valid_csv = b"Ad,Soyad,Yas\nAli,Yilmaz,30\nAyse,Kaya,25\n"
+    rep_valid = SchemaValidator.validate_csv_integrity(valid_csv, "test.csv")
+    assert rep_valid.is_valid
+    assert rep_valid.score >= 90.0
+
+    # 2. Empty CSV
+    rep_empty = SchemaValidator.validate_csv_integrity(b"", "empty.csv")
+    assert not rep_empty.is_valid
+    assert any(i.code == "EMPTY_CSV_FILE" for i in rep_empty.issues)
+
+    # 3. Mojibake / Replacement chars
+    bad_bytes = "Ad,Soyad\nAli,\ufffd\ufffd".encode("utf-8")
+    rep_bad = SchemaValidator.validate_csv_integrity(bad_bytes, "bad.csv")
+    assert any(i.code == "MOJIBAKE_DETECTED" for i in rep_bad.issues)

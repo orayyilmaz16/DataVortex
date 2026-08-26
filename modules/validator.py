@@ -158,6 +158,95 @@ class SchemaValidator:
         return clean_cols, issues
 
     @classmethod
+    def validate_csv_integrity(cls, file_bytes: bytes, filename: str = "data.csv") -> ValidationReport:
+        """
+        Ham CSV bayt akışının dosya bütünlüğünü, satır ayraç tutarlılığını ve kodlama sağlığını denetler.
+        """
+        report = ValidationReport(is_valid=True)
+        if not file_bytes:
+            report.add_issue(ValidationIssue(
+                field=filename,
+                message="CSV dosyası tamamen boş (0 bayt).",
+                severity=ValidationSeverity.CRITICAL,
+                code="EMPTY_CSV_FILE"
+            ))
+            report.score = 0.0
+            report.grade = "F (Boş Dosya)"
+            return report
+
+        # 1. Kodlama & Bozuk Karakter (Mojibake / Replacement Char) Denetimi
+        try:
+            text = file_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            try:
+                text = file_bytes.decode("cp1254")
+                report.add_issue(ValidationIssue(
+                    field="Karakter Kodlaması",
+                    message="Dosya UTF-8 standardında değil, CP1254 (Türkçe Windows) olarak algılandı.",
+                    severity=ValidationSeverity.INFO,
+                    code="NON_UTF8_ENCODING",
+                    suggestion="UTF-8 veya UTF-8-BOM formatında kaydetmeniz önerilir."
+                ))
+            except UnicodeDecodeError:
+                text = file_bytes.decode("latin-1", errors="replace")
+                report.add_issue(ValidationIssue(
+                    field="Karakter Kodlaması",
+                    message="Dosya kodlamasında bilinmeyen baytlar tespit edildi (Latin-1 ile kurtarıldı).",
+                    severity=ValidationSeverity.WARNING,
+                    code="CORRUPTED_ENCODING"
+                ))
+
+        if "\ufffd" in text:
+            bad_char_count = text.count("\ufffd")
+            report.add_issue(ValidationIssue(
+                field="Karakter Bütünlüğü",
+                message=f"Metin içerisinde {bad_char_count} adet bozuk/tanımsız karakter (\ufffd) tespit edildi.",
+                severity=ValidationSeverity.WARNING,
+                code="MOJIBAKE_DETECTED",
+                affected_count=bad_char_count
+            ))
+
+        # 2. Satır bazlı ayraç tutarlılığı (Jagged / Asimetrik satır denetimi)
+        lines = [ln for ln in text.splitlines() if ln.strip()][:100]
+        if len(lines) > 1:
+            delims = [",", ";", "\t", "|"]
+            best_delim = ","
+            best_cnt = 0
+            for d in delims:
+                c = lines[0].count(d)
+                if c > best_cnt:
+                    best_cnt = c
+                    best_delim = d
+
+            if best_cnt > 0:
+                header_cols = lines[0].count(best_delim)
+                jagged_lines = 0
+                for idx, ln in enumerate(lines[1:], start=2):
+                    ln_cols = ln.count(best_delim)
+                    if abs(ln_cols - header_cols) > 2:
+                        jagged_lines += 1
+
+                if jagged_lines > 0:
+                    report.add_issue(ValidationIssue(
+                        field="Satır Tutarlılığı (Jagged Rows)",
+                        message=f"İlk 100 satırın {jagged_lines} tanesinde başlık sütun sayısından farklı ayraç sayısı tespit edildi.",
+                        severity=ValidationSeverity.WARNING,
+                        code="JAGGED_CSV_ROWS",
+                        suggestion="Satırlarda fazladan tırnak veya kaçış karakteri (escape) gerekebilir."
+                    ))
+
+        # Kalite skoru
+        report.score = 100.0 - (len(report.get_warnings()) * 15.0) - (len(report.get_errors()) * 40.0)
+        report.score = max(0.0, min(100.0, report.score))
+        if report.score >= 90:
+            report.grade = "A+ (Mükemmel)"
+        elif report.score >= 75:
+            report.grade = "A (İyi)"
+        else:
+            report.grade = "B/C (Uyarılar Var)"
+        return report
+
+    @classmethod
     def validate_dataframe(cls, df: Optional[pd.DataFrame]) -> ValidationReport:
         """Bir pandas DataFrame'i baştan uca denetler."""
         report = ValidationReport(is_valid=True)
@@ -853,6 +942,41 @@ class DataStressTester:
             "passed": t10_pass,
             "status": "Geçti" if t10_pass else "Uyarı",
             "message": f"Bellek boyutu: {mem_mb:.2f} MB",
+            "weight": 10
+        })
+
+        # Test 11: Karakter Kodlaması & Metin Bütünlüğü (Mojibake Denetimi)
+        mojibake_patterns = ("\ufffd", "Ã§", "ÄŸ", "Ä±", "Ã¶", "ÅŸ", "Ã¼", "Ã‡", "Ä°", "Åž", "Ã–", "Ãœ")
+        mojibake_found = 0
+        for col in df.columns:
+            s = df[col]
+            if pd.api.types.is_string_dtype(s) or pd.api.types.is_object_dtype(s):
+                for val in s.dropna():
+                    v_str = str(val)
+                    if any(p in v_str for p in mojibake_patterns):
+                        mojibake_found += 1
+        t11_pass = mojibake_found == 0
+        tests.append({
+            "name": "Karakter Kodlaması & Metin Bütünlüğü",
+            "passed": t11_pass,
+            "status": "Geçti" if t11_pass else "Uyarı",
+            "message": "Metinler ve Türkçe karakterler tutarlı." if t11_pass else f"{mojibake_found} bozuk karakter kalıbı tespit edildi.",
+            "weight": 10
+        })
+
+        # Test 12: Karma Tip & Serileştirme Homojenliği
+        mixed_cols = []
+        for col in df.columns:
+            if df[col].dtype == "object":
+                types = {type(v) for v in df[col].dropna()}
+                if len(types) > 1:
+                    mixed_cols.append(col)
+        t12_pass = len(mixed_cols) == 0
+        tests.append({
+            "name": "Sütun Tipi Homojenliği (PyArrow & ML Güvenliği)",
+            "passed": t12_pass,
+            "status": "Geçti" if t12_pass else "Uyarı",
+            "message": "Tüm sütunlar homojen tipte." if t12_pass else f"Karma tip içeren sütunlar: {', '.join(mixed_cols)}",
             "weight": 10
         })
 

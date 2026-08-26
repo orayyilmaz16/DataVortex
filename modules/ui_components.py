@@ -19,10 +19,19 @@ class UIComponents:
 
     CUSTOM_CSS = """
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
-
         html, body, [class*="css"] {
-            font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Instant Smooth Sidebar */
+        section[data-testid="stSidebar"] {
+            background: #0B0F19 !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+        section[data-testid="stSidebar"] > div {
+            padding-top: 1.2rem !important;
         }
 
         /* Gradient Hero Banner */
@@ -387,18 +396,36 @@ class UIComponents:
         """, unsafe_allow_html=True)
 
     @classmethod
-    def render_loading_overlay(cls, title: str = "Veri Yükleniyor...", subtitle: str = "Excel tablonuz işleniyor ve optimize ediliyor...", step_badge: str = "⚡ Akıllı Şema Taraması"):
-        """Görsel animasyonlu neon yükleme kartını gösterir."""
+    def render_file_upload_card(cls, filename: str, metadata: Dict[str, Any]):
+        """Yüklenen dosyanın teknik detaylarını (kodlama, ayraç, satır/sütun, süre) rozetlerle gösterir."""
+        is_csv = filename.lower().endswith((".csv", ".tsv", ".txt"))
+        file_type = "CSV Tablosu" if is_csv else "Excel Tablosu"
+        rows = metadata.get("rows", 0)
+        cols = metadata.get("cols", 0)
+        dur = metadata.get("duration_ms", 0.0)
+        enc = str(metadata.get("encoding", "utf-8")).upper()
+        delim = metadata.get("delimiter", ",")
+        delim_name = {",": "Virgül (,)", ";": "Noktalı Virgül (;)", "\t": "Tab (\\t)", "|": "Dikey Çizgi (|)"}.get(delim, delim)
+
+        badges = [
+            f"📄 {filename}",
+            f"📊 {rows:,} Satır × {cols} Sütun",
+            f"⚡ {dur:.1f} ms"
+        ]
+        if is_csv:
+            badges.append(f"🔤 {enc}")
+            badges.append(f"✂️ Ayraç: {delim_name}")
+
+        badges_html = " ".join([f"<span class='hero-badge' style='margin: 3px; background: rgba(16, 185, 129, 0.15); color: #34D399; border-color: rgba(16, 185, 129, 0.35);'>{b}</span>" for b in badges])
+
         st.markdown(f"""
-        <div class="neon-loader-container">
-            <div class="vortex-spinner-ring">
-                <div class="vortex-ring-1"></div>
-                <div class="vortex-ring-2"></div>
-                <div class="vortex-core"></div>
+        <div class="glass-card" style="padding: 12px 16px; margin-bottom: 15px; border-left: 4px solid #10B981;">
+            <div style="font-weight: 700; color: #34D399; font-size: 0.92rem; margin-bottom: 6px;">
+                ✅ {file_type} Başarıyla Yüklendi ve Optimize Edildi
             </div>
-            <div class="loader-title">{title}</div>
-            <div class="loader-subtitle">{subtitle}</div>
-            <div class="loader-step-badge">{step_badge}</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                {badges_html}
+            </div>
         </div>
         """, unsafe_allow_html=True)
 

@@ -5,12 +5,12 @@
 [![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.3%2B-F7931E.svg)](https://scikit-learn.org/)
 [![Plotly](https://img.shields.io/badge/Plotly-5.18%2B-3F4F75.svg)](https://plotly.com/)
 [![Pandas](https://img.shields.io/badge/Pandas-2.0%2B-150458.svg)](https://pandas.pydata.org/)
-[![Pytest Tests](https://img.shields.io/badge/Pytest-26%20Passed-brightgreen.svg)](https://pytest.org/)
+[![Pytest Tests](https://img.shields.io/badge/Pytest-32%20Passed-brightgreen.svg)](https://pytest.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-**DataVortex**, işletmeler, veri analistleri, araştırmacılar ve veri bilimciler için geliştirilmiş, uçtan uca modern ve interaktif bir **Excel Veri Bilimi, Güvenli Validasyon Mimarisi, Keşifçi Veri Analizi (EDA), 1-Tık Otomatik Makine Öğrenmesi (AutoML), Canlı Tahmin Simülatörü ve Sistem Test Merkezi** platformudur.
+**DataVortex**, işletmeler, veri analistleri, araştırmacılar ve veri bilimciler için geliştirilmiş, uçtan uca modern ve interaktif bir **Excel & CSV Veri Bilimi, Akıllı Kodlama/Ayraç Tespiti, Güvenli Validasyon Mimarisi, Keşifçi Veri Analizi (EDA), 1-Tık Otomatik Makine Öğrenmesi (AutoML), Canlı Tahmin Simülatörü ve Sistem Test Merkezi** platformudur.
 
-Kod yazmaya gerek kalmadan Excel (.xlsx, .xls, .xlsm) veya CSV tablolarınızı yükleyebilir; veri sağlığını anlık izleyebilir, veriyi temizleyip dönüştürebilir, işlem geçmişini (Undo/Redo) yönetebilir, güvenli formüllerle yeni sütunlar türetebilir, zengin 2D/3D interaktif grafiklerle görselleştirebilir, **1-tıkla tüm makine öğrenmesi modellerini veri setinize otomatik uyarlayıp eğitebilir**, en iyi şampiyon modeli seçebilir ve anlık girdi değerleriyle canlı tahminler üretebilirsiniz.
+Kod yazmaya gerek kalmadan Excel (.xlsx, .xls, .xlsm) veya CSV (.csv, .tsv, .txt) tablolarınızı yükleyebilir; otomatik kodlama (UTF-8, CP1254, ISO-8859-9) ve ayraç (virgül, noktalı virgül, tab) tespitiyle sıfır hata garantisiyle verinizi işleyebilirsiniz.
 
 ---
 
@@ -26,10 +26,12 @@ flowchart TD
     UI --> TH[In-App Test & Diagnostic Hub - modules/test_runner.py]
 
     VE --> SG[Schema & Type Guard]
+    VE --> CSV_Guard[CSV & Encoding Integrity Guard]
     VE --> IV[Input & Range Validator]
     VE --> MV[ML Readiness Guard]
     VE --> FV[AST Safe Formula Parser]
 
+    DP --> LoadEngine[Smart CSV/Excel Multi-Encoding Engine]
     DP --> Undo[Undo/Redo History Stack]
     DP --> Imp[Smart Imputer]
     DP --> Out[Outlier Clipper]
@@ -40,7 +42,13 @@ flowchart TD
 
 ## 🚀 Öne Çıkan Özellikler
 
-### 🛡️ 1. Kurumsal Validasyon & Güvenlik Mimarisi (`modules/validator.py`)
+### 📥 1. Akıllı CSV & Excel Yükleme Motoru (`modules/data_processor.py`)
+- **Otomatik Kodlama (Encoding) Tespiti:** Türkçe karakterler (`ç, ğ, ı, ö, ş, ü, İ`) içeren `UTF-8`, `UTF-8-BOM`, `CP1254 (Türkçe Windows)`, `ISO-8859-9` ve `Latin-1` formatlarını sıfır bozulma (mojibake) ile tanır.
+- **Akıllı Ayraç (Delimiter) Sniffer:** Virgül (`,`), noktalı virgül (`;`), tab (`\t`), dikey çizgi (`|`) ayraçlarını satır tutarlılık puanlamasıyla otomatik seçer; dileyen kullanıcıya manuel kontrol sunar.
+- **Türkçe/Avrupa Ondalık & Binlik Formatı Desteği:** `1.250,50` veya `12,50` formatındaki sayıları otomatik algılayıp sayısal float tiplerine dönüştürür.
+- **Toplu Tahmin (Batch ML) Entegrasyonu:** Makine öğrenmesi toplu tahmin boru hattında da CSV ve Excel dosyalarını kusursuz işler.
+
+### 🛡️ 2. Kurumsal Validasyon & Güvenlik Mimarisi (`modules/validator.py`)
 - **Şema & Enjeksiyon Koruması:** Sütun isimlerindeki XSS, SQL injection ve yasadışı karakterleri temizler, mükerrer ve adsız sütunları benzersizleştirir.
 - **AST Tabanlı Güvenli Formül Motoru:** Python `eval`/`exec` açıklarını tamamen engelleyen, yalnızca güvenli matematiksel AST düğümlerine izin veren hesaplanan sütun türetme motoru.
 - **Girdi & Tip Uyumu:** Doldurma sabitleri, aykırı değer sınırları ve tip dönüştürme veri kaybı oranlarını önceden hesaplayıp denetler.
