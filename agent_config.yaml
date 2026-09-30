@@ -1,0 +1,56 @@
+# ==============================================================================
+# ⚡ DATAVORTEX AGENT EXECUTION & TOKEN CONTROLLER CONFIG
+# ==============================================================================
+# Bu dosya, AI asistanının (Antigravity / Gemini) token harcamasını, çalışma
+# modunu, düşünme sınırını ve döngü muhafızlarını parametrik olarak kontrol eder.
+# ==============================================================================
+
+version: "1.0"
+
+agent_profile:
+  # Çalışma modu: "strict_economy" (en az token), "balanced" (dengeli), "detailed" (ayrıntılı)
+  execution_mode: "strict_economy"
+  
+  # Cevap dili ve üslubu
+  response_language: "tr"
+  verbosity: "minimal"            # Seçenekler: "minimal", "compact", "verbose"
+  include_file_summaries: false   # Değişiklik sonrası tüm dosyayı özetleme
+  max_explanation_sentences: 3    # Açıklamaları en fazla 3 cümleyle sınırla
+
+guards:
+  # Sonsuz döngü ve aşırı düşünme muhafızları
+  anti_overthinking:
+    enabled: true
+    max_tool_calls_per_turn: 4    # Tek seferde çağrılabilecek maksimum araç sayısı
+    prohibit_recursive_search: true # grep/find ile tüm dizini baştan aşağı taramayı engelle
+    direct_execution_only: true    # Planlama/tartışma yerine doğrudan kod değişikliği uygula
+    stop_on_first_solution: true  # İlk çalışan ve doğru çözümde dur, alternatifler üretme
+
+  # Dosya okuma & bellek sınırları
+  file_access:
+    prohibit_full_reads:
+      - "app.py"                  # Asla baştan sona okunamaz, sadece parça okunur
+    max_read_lines: 120           # view_file için önerilen maksimum satır penceresi
+    prohibit_extensions:
+      - ".csv"
+      - ".xlsx"
+      - ".xls"
+      - ".parquet"
+      - ".pkl"
+      - ".joblib"
+      - ".h5"
+      - ".onnx"
+      - ".log"
+    prohibit_directories:
+      - "tests"
+      - ".pytest_cache"
+      - "htmlcov"
+      - "venv"
+      - ".venv"
+      - "scratch"
+      - "tmp"
+
+editing:
+  # Kod yazma stratejisi
+  preferred_tool: "replace_file_content"  # write_to_file yerine diff aracı kullan
+  prohibit_full_rewrite: true             # 50 satırdan uzun dosyaları tümden yeniden yazma

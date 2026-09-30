@@ -1,3 +1,0 @@
-"""
-DataVortex Otomatik Test Paketi
-"""

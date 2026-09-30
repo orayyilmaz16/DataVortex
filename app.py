@@ -39,7 +39,7 @@ from modules.data_processor import DataProcessor, DataHistoryManager
 from modules.automl_engine import AutoMLEngine
 from modules.stats_engine import StatsEngine
 from modules.ui_components import UIComponents, NotificationHub
-from modules.test_runner import SystemTestRunner
+
 
 
 # ==============================================================================
@@ -245,8 +245,8 @@ if raw_df is None or raw_df.empty:
     with c3:
         st.markdown("""
         <div class="glass-card">
-            <h4>🛡️ Validasyon & Sistem Test Merkezi</h4>
-            <p style='color:#94A3B8; font-size:0.9rem;'>AST tabanlı güvenli formül motoru, 20+ kuraldan oluşan canlı stres testi ve dahili Pytest otomasyon paketi.</p>
+            <h4>🛡️ Validasyon & Güvenlik Mimarisi</h4>
+            <p style='color:#94A3B8; font-size:0.9rem;'>AST tabanlı güvenli formül motoru, XSS koruması, ML muhafızı ve veri kalitesi puanlama motoru.</p>
         </div>
         """, unsafe_allow_html=True)
     st.stop()
@@ -309,15 +309,14 @@ UIComponents.render_kpi_cards(df, health_dict)
 # 7. ANA SEKMELİ VERİ BİLİMİ & AUTOML MİMARİSİ
 # ==============================================================================
 
-tab_explorer, tab_cleaning, tab_eda, tab_charts, tab_stats_ml, tab_insights, tab_tests, tab_export = st.tabs([
+tab_explorer, tab_cleaning, tab_eda, tab_charts, tab_stats_ml, tab_insights, tab_export = st.tabs([
     "📁 1. Veri Gezgini & Şema",
     "🧹 2. Veri Temizleme & Manipülasyon",
     "📊 3. Keşifçi Analiz (EDA)",
     "📈 4. İnteraktif Grafikler",
     "🤖 5. 1-Tık AutoML & ML Stüdyosu",
     "💡 6. Akıllı İçgörüler & AI",
-    "🧪 7. Sistem & Veri Test Merkezi",
-    "💾 8. Dışa Aktar & Rapor"
+    "💾 7. Dışa Aktar & Rapor"
 ])
 
 
@@ -1522,74 +1521,7 @@ with tab_insights:
 
 
 # ==============================================================================
-# SEKME 7: SİSTEM & VERİ TEST MERKEZİ (CANLI TEST & STRES TESTİ)
-# ==============================================================================
-with tab_tests:
-    st.markdown("### 🧪 Sistem & Veri Test Merkezi (Automated Test Hub)")
-    st.write("DataVortex platformunun tüm çekirdek motorlarını, validasyon kurallarını ve aktif veri setinizi tek tıkla test edin.")
-
-    test_hub_tab1, test_hub_tab2 = st.tabs(["🚀 1. Otomasyon Test Paketi (Pytest Suite)", "🛡️ 2. Canlı Veri Seti Stres Testi (20+ Kural)"])
-
-    with test_hub_tab1:
-        st.markdown("#### ⚙️ Pytest Çekirdek Motor & Birim Testleri")
-        st.write("Validasyon kuralları, AST formül motoru, veri manipülasyonu, AutoML ve istatistik motorlarının birim testlerini canlı çalıştırın.")
-
-        if st.button("🚀 Tüm Sistem Testlerini Çalıştır (Pytest)", type="primary", width="stretch"):
-            with st.spinner("Pytest test paketi çalıştırılıyor..."):
-                test_results = SystemTestRunner.run_automated_test_suite()
-                st.session_state["system_test_results"] = test_results
-                if test_results["is_success"]:
-                    NotificationHub.notify_success(f"Tüm testler geçti! ({test_results['passed_tests']}/{test_results['total_tests']})")
-                else:
-                    NotificationHub.notify_error(f"{test_results['failed_tests']} test başarısız oldu.")
-
-        if "system_test_results" in st.session_state:
-            tres = st.session_state["system_test_results"]
-            c_t1, c_t2, c_t3, c_t4 = st.columns(4)
-            c_t1.metric("Toplam Test", tres["total_tests"])
-            c_t2.metric("Başarılı (Passed)", tres["passed_tests"], delta="0 Hata")
-            c_t3.metric("Başarısız (Failed)", tres["failed_tests"])
-            c_t4.metric("Çalışma Süresi", f"{tres['duration_sec']} sn")
-
-            if tres["is_success"]:
-                st.success(f"🎉 **SIFIR HATA BAŞARISI!** Toplam {tres['total_tests']} birim ve entegrasyon testi %100 başarıyla tamamlandı.")
-            else:
-                st.error(f"❌ {tres['failed_tests']} adet test başarısız oldu.")
-
-            if tres["parsed_tests"]:
-                st.markdown("##### 📋 Test Sonuçları Listesi")
-                st.dataframe(pd.DataFrame(tres["parsed_tests"]), width="stretch")
-
-            with st.expander("📄 Ham Pytest Çıktısı (Terminal Logs)", expanded=False):
-                st.code(tres["raw_output"], language="bash")
-
-    with test_hub_tab2:
-        st.markdown("#### 🛡️ Aktif Veri Seti 20+ Nokta Teşhis ve Stres Testi")
-        st.write("Mevcut aktif veri setine kurumsal dayanıklılık, boyutluluk laneti, tekillik ve anomali stres testlerini uygulayın.")
-
-        if st.button("🔍 Veri Setine Canlı Stres Testi Uygula", type="primary", width="stretch"):
-            with st.spinner("Veri seti 20+ kural ile stres testine tabi tutuluyor..."):
-                stress_results = SystemTestRunner.run_live_data_stress_test(df)
-                st.session_state["data_stress_results"] = stress_results
-                NotificationHub.notify_success(f"Stres testi tamamlandı (Skor: %{stress_results['overall_score']}).")
-
-        if "data_stress_results" in st.session_state:
-            sres = st.session_state["data_stress_results"]
-            c_s1, c_s2, c_s3 = st.columns(3)
-            c_s1.metric("Stres Test Skoru", f"%{sres['overall_score']}")
-            c_s2.metric("Geçen Kural Sayısı", f"{sres['tests_passed']} / {sres['total_tests']}")
-            c_s3.metric("Genel Durum", sres["overall_status"])
-
-            st.markdown("##### 🔬 Detaylı Teşhis Raporu")
-            for t_item in sres["details"]:
-                icon = "✅" if t_item["passed"] else "⚠️"
-                with st.expander(f"{icon} {t_item['name']} — {t_item['status']}", expanded=not t_item["passed"]):
-                    st.write(f"**Açıklama:** {t_item['message']}")
-                    st.write(f"**Kural Ağırlığı:** {t_item['weight']} puan")
-
-
-# ==============================================================================
-# SEKME 8: DIŞA AKTARMA & RAPORLAMA
+# SEKME 7: DIŞA AKTARMA & RAPORLAMA
 # ==============================================================================
 with tab_export:
     st.markdown("### 💾 Temizlenmiş Veriyi ve Raporları Dışa Aktarın")

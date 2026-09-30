@@ -5,10 +5,10 @@
 [![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.3%2B-F7931E.svg)](https://scikit-learn.org/)
 [![Plotly](https://img.shields.io/badge/Plotly-5.18%2B-3F4F75.svg)](https://plotly.com/)
 [![Pandas](https://img.shields.io/badge/Pandas-2.0%2B-150458.svg)](https://pandas.pydata.org/)
-[![Pytest Tests](https://img.shields.io/badge/Pytest-32%20Passed-brightgreen.svg)](https://pytest.org/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Access](https://img.shields.io/badge/Access-Private%20Repository-red.svg)](#)
+[![License](https://img.shields.io/badge/License-Proprietary%20%2F%20All%20Rights%20Reserved-darkred.svg)](#)
 
-**DataVortex**, işletmeler, veri analistleri, araştırmacılar ve veri bilimciler için geliştirilmiş, uçtan uca modern ve interaktif bir **Excel & CSV Veri Bilimi, Akıllı Kodlama/Ayraç Tespiti, Güvenli Validasyon Mimarisi, Keşifçi Veri Analizi (EDA), 1-Tık Otomatik Makine Öğrenmesi (AutoML), Canlı Tahmin Simülatörü ve Sistem Test Merkezi** platformudur.
+**DataVortex**, işletmeler, veri analistleri, araştırmacılar ve veri bilimciler için geliştirilmiş, uçtan uca modern ve interaktif bir **Excel & CSV Veri Bilimi, Akıllı Kodlama/Ayraç Tespiti, Güvenli Validasyon Mimarisi, Keşifçi Veri Analizi (EDA), 1-Tık Otomatik Makine Öğrenmesi (AutoML) ve Canlı Tahmin Simülatörü** platformudur.
 
 Kod yazmaya gerek kalmadan Excel (.xlsx, .xls, .xlsm) veya CSV (.csv, .tsv, .txt) tablolarınızı yükleyebilir; otomatik kodlama (UTF-8, CP1254, ISO-8859-9) ve ayraç (virgül, noktalı virgül, tab) tespitiyle sıfır hata garantisiyle verinizi işleyebilirsiniz.
 
@@ -23,7 +23,6 @@ flowchart TD
     UI --> DP[Data Processor & Manipulation - modules/data_processor.py]
     UI --> ML[AutoML & Modeling Engine - modules/automl_engine.py]
     UI --> ST[Statistical Engine - modules/stats_engine.py]
-    UI --> TH[In-App Test & Diagnostic Hub - modules/test_runner.py]
 
     VE --> SG[Schema & Type Guard]
     VE --> CSV_Guard[CSV & Encoding Integrity Guard]
@@ -54,25 +53,21 @@ flowchart TD
 - **Girdi & Tip Uyumu:** Doldurma sabitleri, aykırı değer sınırları ve tip dönüştürme veri kaybı oranlarını önceden hesaplayıp denetler.
 - **ML Muhafızı (ML Guard):** Tarih sütunlarının hedef seçilmesini, tek sınıflı veya yetersiz verili modellerin eğitilmesini engeller; çoklu doğrusallığı ve sıfır varyanslı değişkenleri uyarır.
 
-### 🧹 2. Veri Manipülasyonu & İşlem Geçmişi (Undo/Redo) (`modules/data_processor.py`)
+### 🧹 3. Veri Manipülasyonu & İşlem Geçmişi (Undo/Redo) (`modules/data_processor.py`)
 - **İşlem Geçmişi (History Stack):** Yapılan her temizleme, doldurma, silme ve dönüştürme adımını etkilenen satır sayısı ve RAM değişimiyle kaydeder; tek tıkla geri alma (Undo) ve ileri alma (Redo) sağlar.
 - **Eksik Değer Yönetimi:** Ortalama, Medyan, Mod, Sabit Değer, İleri/Geri Doldurma veya satır/sütun silme.
 - **Aykırı Değer (Outlier) Budama:** IQR (1.5x) ve Z-Score (>3 std) yöntemleriyle sınır değerlere kırpma (Clip) veya silme.
 - **Kural Tabanlı Gelişmiş Filtreleme:** Sayısal aralık, eşitlik, içerir, metin ve null kontrolleriyle çoklu filtreleme.
 
-### 🤖 3. 1-Tık Akıllı AutoML & Model Liderlik Tablosu (`modules/automl_engine.py`)
+### 🤖 4. 1-Tık Akıllı AutoML & Model Liderlik Tablosu (`modules/automl_engine.py`)
 - **Otomatik Görev Tespiti:** Sınıflandırma (Classification) veya Regresyon (Regression) görevini akıllıca belirler.
 - **Geniş Model Benchmark Havuzu:** Random Forest, Hist Gradient Boosting, Extra Trees, Logistic Regression, Ridge, KNN, Decision Tree, Linear SVC/SVR, Gaussian Naive Bayes.
 - **🏆 Şampiyon Model Seçimi:** F1-Score / R² skoruna göre en iyi modeli seçer ve özel altın vitrinde sunar.
 - **Model Açıklanabilirliği:** Özellik önem düzeyleri, Confusion Matrix ve Gerçek vs. Tahmin saçılım analizi.
 
-### 🔮 4. Canlı Tahmin Simülatörü & Toplu Tahmin
+### 🔮 5. Canlı Tahmin Simülatörü & Toplu Tahmin
 - **What-If Simülatörü:** Dinamik arayüz girdileriyle anlık sınıf/değer tahmini ve güven olasılık dağılımı (Confidence).
 - **Toplu Tahmin (Batch):** Yeni yüklenen Excel/CSV dosyasına model tahminlerini ekleyip Excel/CSV formatında indirme.
-
-### 🧪 5. Sistem & Veri Test Merkezi (`modules/test_runner.py`)
-- **Arayüzden Canlı Pytest Koşucusu:** 26 birim/entegrasyon testini tek tıkla Streamlit arayüzünden çalıştırır ve canlı karne sunar.
-- **20+ Kural Canlı Veri Stres Testi:** Aktif veri setini boyutluluk laneti, tekillik, eksiklik yoğunluğu ve anomali risklerine karşı puanlar (0-100).
 
 ### 📊 6. Keşifçi Veri Analizi (EDA) & İstatistik Motoru (`modules/stats_engine.py`)
 - **İstatistikler:** Çarpıklık, basıklık, varyans, IQR ve dağılım metrikleri.
@@ -102,12 +97,7 @@ cd DataVortex
 pip install -r requirements.txt
 ```
 
-### 3. Otomasyon Testlerini Çalıştırın (Pytest)
-```bash
-pytest tests/ -v
-```
-
-### 4. Uygulamayı Başlatın
+### 3. Uygulamayı Başlatın
 ```bash
 streamlit run app.py
 ```
@@ -121,31 +111,24 @@ Tarayıcınızda otomatik olarak açılacaktır (varsayılan: `http://localhost:
 ```text
 DataVortex/
 │
-├── app.py                      # DataVortex Ana UI Kontrolcüsü (8 Sekmeli)
+├── app.py                      # DataVortex Ana UI Kontrolcüsü
 ├── requirements.txt            # Python Bağımlılıkları
-├── README.md                   # Kapsamlı Proje Dokümantasyonu
+├── README.md                   # Proje Dokümantasyonu
 │
-├── modules/                    # Çekirdek Modüler Mimari
-│   ├── __init__.py
-│   ├── validator.py            # Şema, Girdi, Formül ve ML Validasyon Motoru
-│   ├── data_processor.py       # Veri Temizleme, Manipülasyon & Undo/Redo Motoru
-│   ├── automl_engine.py        # 1-Tık AutoML, Pipeline & Tahmin Motoru
-│   ├── stats_engine.py         # Hipotez Testleri, K-Means, Isolation Forest, PCA
-│   ├── ui_components.py        # CSS, Glassmorphism, Yükleme Ekranı & Toast Bildirimleri
-│   └── test_runner.py          # Arayüz İçi Pytest & Stres Testi Yürütücüsü
-│
-└── tests/                      # Kapsamlı Otomasyon Test Paketi (26 Test)
+└── modules/                    # Çekirdek Modüler Mimari
     ├── __init__.py
-    ├── conftest.py             # Test Fikstürleri & Sentetik Veri Setleri
-    ├── test_validator.py       # Validasyon & Formül Testleri
-    ├── test_data_processor.py  # Manipülasyon & Undo/Redo Testleri
-    ├── test_automl_engine.py   # AutoML & Tahmin Testleri
-    ├── test_stats_engine.py    # İstatistik & Algoritma Testleri
-    └── test_schema_guard.py    # Şema Güvenliği & PyArrow Uyumluluk Testleri
+    ├── validator.py            # Şema, Girdi, Formül ve ML Validasyon Motoru
+    ├── data_processor.py       # Veri Temizleme, Manipülasyon & Undo/Redo Motoru
+    ├── automl_engine.py        # 1-Tık AutoML, Pipeline & Tahmin Motoru
+    ├── stats_engine.py         # Hipotez Testleri, K-Means, Isolation Forest, PCA
+    └── ui_components.py        # CSS, Glassmorphism, Yükleme Ekranı & Toast Bildirimleri
 ```
 
 ---
 
-## 📄 Lisans
+## 🔒 Lisans ve Telif Hakkı (Confidential & Proprietary)
 
-Bu proje MIT lisansı altında sunulmaktadır.
+Bu yazılım ve tüm kaynak kodları **özel (private) mülkiyet altındadır**; tüm hakları saklıdır (*All Rights Reserved*). 
+
+Hak sahibinin yazılı izni olmaksızın projenin tamamı veya herhangi bir parçası kopyalanamaz, çoğaltılamaz, dağıtılamaz, açık kaynak haline getirilemez, ticari veya gayriticari amaçla üçüncü şahıslarla paylaşılamaz.
+

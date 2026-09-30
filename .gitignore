@@ -35,8 +35,17 @@ env.bak/
 venv.bak/
 
 # Streamlit temporary files and cache
-.streamlit/
+.streamlit/secrets.toml
 *.log
+
+# Environment variables & secrets (CRITICAL FOR PRIVATE REPOS)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.secret
 
 # IDEs and Editors
 .vscode/
@@ -50,6 +59,27 @@ venv.bak/
 Thumbs.db
 desktop.ini
 
-# Temporary data and exports
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Local data, models and test exports (Prevent committing sensitive datasets)
+data/
+datasets/
+models/
+*.pkl
+*.joblib
+*.h5
+*.onnx
 scratch/
 tmp/
+temp/
+exports/
+*.csv
+*.xlsx
+*.xls
+*.tsv
+!tests/**
+
