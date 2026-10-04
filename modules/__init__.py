@@ -1,8 +1,9 @@
 """
 ⚡ DataVortex — Modüler Veri Bilimi, Validasyon, AutoML & İstatistik Kütüphanesi
+(Backward-Compatible Facade Root)
 """
 
-from .validator import (
+from datavortex.validation import (
     ValidationSeverity,
     ValidationIssue,
     ValidationReport,
@@ -12,10 +13,21 @@ from .validator import (
     MLGuard,
     DataStressTester,
 )
-from .data_processor import DataProcessor
-from .automl_engine import AutoMLEngine
-from .stats_engine import StatsEngine
-from .ui_components import UIComponents, NotificationHub
+from datavortex.data import (
+    DataProcessor,
+    DataHistoryManager,
+    OperationRecord,
+)
+from datavortex.ml import (
+    AutoMLEngine,
+)
+from datavortex.analytics import (
+    StatsEngine,
+)
+from datavortex.ui import (
+    UIComponents,
+    NotificationHub,
+)
 
 __all__ = [
     "ValidationSeverity",
@@ -27,6 +39,8 @@ __all__ = [
     "MLGuard",
     "DataStressTester",
     "DataProcessor",
+    "DataHistoryManager",
+    "OperationRecord",
     "AutoMLEngine",
     "StatsEngine",
     "UIComponents",

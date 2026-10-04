@@ -18,24 +18,29 @@ Kod yazmaya gerek kalmadan Excel (.xlsx, .xls, .xlsm) veya CSV (.csv, .tsv, .txt
 
 ```mermaid
 flowchart TD
-    UI[Streamlit UI Controller - app.py] --> NH[Notification & Loading Hub - modules/ui_components.py]
-    UI --> VE[Validation Engine - modules/validator.py]
-    UI --> DP[Data Processor & Manipulation - modules/data_processor.py]
-    UI --> ML[AutoML & Modeling Engine - modules/automl_engine.py]
-    UI --> ST[Statistical Engine - modules/stats_engine.py]
+    App["Thin Bootstrap Root (app.py)"] --> UI_Pages["UI Feature Pages (datavortex/ui/pages/)"]
+    UI_Pages --> Explorer["1. Veri Gezgini (explorer.py)"]
+    UI_Pages --> Cleaning["2. Veri Temizleme & Undo (cleaning.py)"]
+    UI_Pages --> EDA["3. Keşifçi Analiz EDA (eda.py)"]
+    UI_Pages --> Charts["4. İnteraktif Grafikler (charts.py)"]
+    UI_Pages --> MLStudio["5. AutoML & ML Stüdyosu (ml_studio.py)"]
+    UI_Pages --> Insights["6. Akıllı İçgörüler (insights.py)"]
+    UI_Pages --> ExportPage["7. Dışa Aktar & Rapor (export.py)"]
 
-    VE --> SG[Schema & Type Guard]
-    VE --> CSV_Guard[CSV & Encoding Integrity Guard]
-    VE --> IV[Input & Range Validator]
-    VE --> MV[ML Readiness Guard]
-    VE --> FV[AST Safe Formula Parser]
+    UI_Pages --> Core["Core Layer (datavortex/core/)"]
+    UI_Pages --> DataLayer["Data Layer (datavortex/data/)"]
+    UI_Pages --> ValidationLayer["Validation Layer (datavortex/validation/)"]
+    UI_Pages --> MLLayer["ML & AutoML Layer (datavortex/ml/)"]
+    UI_Pages --> AnalyticsLayer["Analytics Layer (datavortex/analytics/)"]
+    UI_Pages --> ServicesLayer["Services Layer (datavortex/services/)"]
 
-    DP --> LoadEngine[Smart CSV/Excel Multi-Encoding Engine]
-    DP --> Undo[Undo/Redo History Stack]
-    DP --> Imp[Smart Imputer]
-    DP --> Out[Outlier Clipper]
-    DP --> Calc[Calculated Columns]
+    Legacy["modules/ (Backward Compatibility Facade)"] -.-> Core
+    Legacy -.-> DataLayer
+    Legacy -.-> ValidationLayer
+    Legacy -.-> MLLayer
+    Legacy -.-> AnalyticsLayer
 ```
+
 
 ---
 
