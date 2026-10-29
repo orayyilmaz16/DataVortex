@@ -1,7 +1,7 @@
 # GEMINI.md - Context & Token Optimization Instructions
 
 ## 🎯 Proje Özeti
-**DataVortex**: Streamlit tabanlı, Excel/CSV veri manipülasyonu, EDA ve AutoML platformu (Private mülkiyet).
+**DataVortex**: Streamlit tabanlı, Excel/CSV veri manipülasyonu, EDA ve AutoML platformu (Açık kaynak - MIT).
 
 ---
 

@@ -1,12 +1,11 @@
 # ⚡ DataVortex — Akıllı Excel Veri Bilimi, Analitik, Validasyon & 1-Tık AutoML Platformu
 
-[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![Python Version](https://img.shields.io/badge/python-3.15%2B-blue.svg)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.30%2B-FF4B4B.svg)](https://streamlit.io/)
 [![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.3%2B-F7931E.svg)](https://scikit-learn.org/)
 [![Plotly](https://img.shields.io/badge/Plotly-5.18%2B-3F4F75.svg)](https://plotly.com/)
 [![Pandas](https://img.shields.io/badge/Pandas-2.0%2B-150458.svg)](https://pandas.pydata.org/)
-[![Access](https://img.shields.io/badge/Access-Private%20Repository-red.svg)](#)
-[![License](https://img.shields.io/badge/License-Proprietary%20%2F%20All%20Rights%20Reserved-darkred.svg)](#)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 **DataVortex**, işletmeler, veri analistleri, araştırmacılar ve veri bilimciler için geliştirilmiş, uçtan uca modern ve interaktif bir **Excel & CSV Veri Bilimi, Akıllı Kodlama/Ayraç Tespiti, Güvenli Validasyon Mimarisi, Keşifçi Veri Analizi (EDA), 1-Tık Otomatik Makine Öğrenmesi (AutoML) ve Canlı Tahmin Simülatörü** platformudur.
 
@@ -89,7 +88,7 @@ flowchart TD
 ## 🛠️ Kurulum & Çalıştırma
 
 ### Gereksinimler
-- Python 3.10 veya üzeri
+- Python 3.15 veya üzeri
 - `pip` paket yöneticisi
 
 ### 1. Depoyu Klonlayın veya Proje Dizinine Gidin
