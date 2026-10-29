@@ -115,24 +115,46 @@ Tarayıcınızda otomatik olarak açılacaktır (varsayılan: `http://localhost:
 ```text
 DataVortex/
 │
-├── app.py                      # DataVortex Ana UI Kontrolcüsü
+├── app.py                      # Streamlit Ana Giriş Noktası
+├── agent_config.yaml           # AI Agent Optimizasyon & Güvenlik Konfigürasyonu
 ├── requirements.txt            # Python Bağımlılıkları
+├── CONTRIBUTING.md             # Açık Kaynak Katkı Rehberi
+├── LICENSE                     # MIT Açık Kaynak Lisansı
 ├── README.md                   # Proje Dokümantasyonu
 │
-└── modules/                    # Çekirdek Modüler Mimari
+├── datavortex/                 # Yeni Nesil Modüler Katman Mimarisi
+│   ├── analytics/              # İstatistik & Hipotez Motoru
+│   ├── core/                   # State, Config & Önbellek Yönetimi
+│   ├── ml/                     # AutoML, Tahmin & Açıklanabilirlik
+│   ├── services/               # Gemini AI & Rapor Dışa Aktarma
+│   ├── ui/                     # UI Sayfaları, Bileşenleri & Temaları
+│   └── validation/             # AST Formül, Model, Girdi & ML Korumaları
+│
+└── modules/                    # Geriye Dönük Uyumluluk Katmanı (Façade)
     ├── __init__.py
-    ├── validator.py            # Şema, Girdi, Formül ve ML Validasyon Motoru
-    ├── data_processor.py       # Veri Temizleme, Manipülasyon & Undo/Redo Motoru
-    ├── automl_engine.py        # 1-Tık AutoML, Pipeline & Tahmin Motoru
-    ├── stats_engine.py         # Hipotez Testleri, K-Means, Isolation Forest, PCA
-    └── ui_components.py        # CSS, Glassmorphism, Yükleme Ekranı & Toast Bildirimleri
+    ├── validator.py
+    ├── data_processor.py
+    ├── automl_engine.py
+    ├── stats_engine.py
+    └── ui_components.py
 ```
 
 ---
 
-## 🔒 Lisans ve Telif Hakkı (Confidential & Proprietary)
+## 🤝 Katkıda Bulunma (Contributing)
 
-Bu yazılım ve tüm kaynak kodları **özel (private) mülkiyet altındadır**; tüm hakları saklıdır (*All Rights Reserved*). 
+DataVortex açık kaynak bir projedir ve topluluk katkılarını memnuniyetle karşılar!
+Hata bildirmek, yeni özellikler önermek veya kod katkısında bulunmak için lütfen [CONTRIBUTING.md](CONTRIBUTING.md) rehberini inceleyin.
 
-Hak sahibinin yazılı izni olmaksızın projenin tamamı veya herhangi bir parçası kopyalanamaz, çoğaltılamaz, dağıtılamaz, açık kaynak haline getirilemez, ticari veya gayriticari amaçla üçüncü şahıslarla paylaşılamaz.
+1. Depoyu Fork'layın
+2. Özellik dalınızı oluşturun (`git checkout -b feature/YeniOzellik`)
+3. Değişikliklerinizi commit edin (`git commit -m 'feat: Yeni özellik eklendi'`)
+4. Dalınıza push yapın (`git push origin feature/YeniOzellik`)
+5. Bir Pull Request (PR) açın
+
+---
+
+## 📜 Lisans (License)
+
+Bu proje **[MIT Lisansı](LICENSE)** altında lisanslanmıştır. Açık kaynak standartlarına uygun olarak herkes tarafından özgürce kullanılabilir, değiştirilebilir ve dağıtılabilir. Detaylar için [LICENSE](LICENSE) dosyasına göz atabilirsiniz.
 
