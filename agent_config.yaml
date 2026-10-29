@@ -26,6 +26,12 @@ guards:
     direct_execution_only: true    # Planlama/tartışma yerine doğrudan kod değişikliği uygula
     stop_on_first_solution: true  # İlk çalışan ve doğru çözümde dur, alternatifler üretme
 
+  # Git ve Dokümantasyon Otomatik Senkronizasyon Protokolü
+  git_sync:
+    auto_pull_on_start: true      # Başlangıçta remote kontrol et
+    auto_push_on_finish: true     # Bitişte commit & push zorunlu
+    auto_update_docs: true        # README.md, .gitignore, GEMINI.md güncelle
+
   # Dosya okuma & bellek sınırları
   file_access:
     prohibit_full_reads:

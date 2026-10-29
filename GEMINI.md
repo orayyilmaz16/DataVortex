@@ -34,6 +34,15 @@
 
 ---
 
+## 🔄 Otomatik Git & Dokümantasyon Senkronizasyon Kuralı (Mandatory On-Every-Turn)
+Her prompt/görev çalıştırıldığında model otomatik olarak şu adımları izlemek ZORUNDADIR:
+1. **Başlangıç:** İşe başlamadan önce remote değişiklikleri almak için `git pull --rebase origin main` kontrolünü çalıştır.
+2. **Dokümantasyon Güncelliği:** Yapılan kod, kütüphane, arayüz veya mimari değişikliklere paralel olarak ilgili dokümantasyonları ([README.md](file:///c:/Users/orayy/Desktop/Veriler/GitHub%20ve%20Proje/Yaz%C4%B1l%C4%B1m%20Projeleri%20%28B%C3%BCy%C3%BCk%29/DataVortex/README.md), [.gitignore](file:///c:/Users/orayy/Desktop/Veriler/GitHub%20ve%20Proje/Yaz%C4%B1l%C4%B1m%20Projeleri%20%28B%C3%BCy%C3%BCk%29/DataVortex/.gitignore), `.geminiignore`, `GEMINI.md` vb.) eş zamanlı güncelle.
+3. **Bitiş (Otomatik Commit & Push):** Değişiklikler tamamlandığında `git status` tara, değiştirilen/yeni dosyalar varsa `git add .`, net bir commit mesajı ile `git commit -m "..."` ve ardından derhal `git push origin main` çalıştırarak remote repoyu tam senkronize et.
+4. Asla kullanıcıya "bunu sen commit et" deme, otomatik push işlemini tamamlayıp özetle.
+
+---
+
 ## 🚫 Yasaklı Dizin ve Dosyalar
 - **Kaldırılan Testler:** `tests/`, `modules/test_runner.py`, `.pytest_cache/`, `htmlcov/`
 - **İkili & Büyük Veriler:** `*.csv`, `*.xlsx`, `*.pkl`, `*.joblib`, `*.h5`, `*.parquet`, `*.onnx`
