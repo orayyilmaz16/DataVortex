@@ -38,14 +38,17 @@ venv.bak/
 .streamlit/secrets.toml
 *.log
 
-# Environment variables & secrets (CRITICAL FOR PRIVATE REPOS)
+# Environment variables & secrets (CRITICAL FOR PUBLIC REPOS)
 .env
-.env.*
-!.env.example
+.env*
+*.env
 *.pem
 *.key
 *.cert
 *.secret
+credentials*
+*.token
+service_account*.json
 
 # IDEs and Editors
 .vscode/
