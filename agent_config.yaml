@@ -31,6 +31,7 @@ guards:
     auto_pull_on_start: true      # Başlangıçta remote kontrol et
     auto_push_on_finish: true     # Bitişte commit & push zorunlu
     auto_update_docs: true        # README.md, .gitignore, GEMINI.md güncelle
+    auto_security_guard: true     # Güvenlik riski taşıyan dosyaları (API key, secret, token, env vb.) otomatik tespit edip .gitignore ve .geminiignore'a ekle
 
   # Dosya okuma & bellek sınırları
   file_access:
