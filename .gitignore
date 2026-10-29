@@ -35,7 +35,8 @@ env.bak/
 venv.bak/
 
 # Streamlit temporary files and cache
-.streamlit/secrets.toml
+.streamlit/secrets*
+.streamlit/*.toml
 *.log
 
 # Environment variables & secrets (CRITICAL FOR PUBLIC REPOS)

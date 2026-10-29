@@ -65,7 +65,8 @@ desktop.ini
 credentials*
 *.token
 service_account*.json
-.streamlit/secrets.toml
+.streamlit/secrets*
+.streamlit/*.toml
 
 # Large Data, Media, Models and Binary Exports
 *.pkl
